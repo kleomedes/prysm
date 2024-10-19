@@ -6,7 +6,7 @@
   "website": "https://www.lightlabs.dev",
   "network_type": "testnet",
   "pretty_name": "Prysm",
-  "chain_id": "localchain-1",
+  "chain_id": "prysm-devnet-1",
   "bech32_prefix": "prysm",
   "daemon_name": "prysmd",
   "node_home": "$HOME/.prysm",
