@@ -125,6 +125,11 @@
         "provider": "ITRocket"
       },
       {
+        "id": "4a88c4925f887325872451659e554aafebdb026d",
+        "address": "prysm-testnet.sychonix.com:19756",
+        "provider": "Sychonix"
+      },
+      {
         "id": "1c69efcfe639d663378bb02f679307876c18fca2",
         "address": "prysm-testnet-rpc.peer.stingray.plus:26616",
         "provider": "StingRay"
@@ -194,6 +199,10 @@
         "provider": "ITRocket"
       },
       {
+        "address": "https://rpc-prysm-t.sychonix.com/",
+        "provider": "Sychonix"
+      },
+      {
         "address": "https://rpc.prysm-testnet.stake-take.com/",
         "provider": "Stake-Take"
       }
@@ -258,6 +267,10 @@
       {
         "address": "https://prysm-testnet-api.itrocket.net/",
         "provider": "ITRocket"
+      },
+      {
+        "address": "https://api-prysm-t.sychonix.com/",
+        "provider": "Sychonix"
       },
       {
         "address": "https://api.prysm-testnet.stake-take.com/",
@@ -357,6 +370,12 @@
       "account_page": "https://testnet.itrocket.net/prysm/account/${accountAddress}"
     },
     {
+      "kind": "PingPub",
+      "url": "https://explorer.sychonix.com/prysm-testnet",
+      "tx_page": "https://explorer.sychonix.com/prysm-testnet/tx/${txHash}",
+      "account_page": "https://explorer.sychonix.com/prysm-testnet/account/${accountAddress}"
+      },
+      {
       "kind": "Stake-Take",
       "url": "https://explorer.stake-take.com/prysm-testnet",
       "tx_page": "https://explorer.stake-take.com/prysm-testnet/tx/${txHash}",
