@@ -81,6 +81,11 @@
         "id": "e3156873994bfbb1999bbf6e4a1ad9cb2f14139e",
         "address": "seed-prysm.j-node.net:29656",
         "provider": "JosephTran"
+       },
+       {
+        "id": "1b5b6a532e24c91d1bc4491a6b989581f5314ea5",
+        "address": "prysm-testnet-seed.itrocket.net:25656",
+        "provider": "ITRocket"
       }
     ],
     "persistent_peers": [
@@ -93,6 +98,15 @@
         "id": "01306d268a332b0032bf01939443e8d3c80473b6",
         "address": "peer-prysm.josephtran.xyz:25656",
         "provider": "JosephTran"
+        },
+        "id": "ff15df83487e4aa8d2819452063f336269958d09",
+        "address": "prysm-testnet-peer.itrocket.net:25657",
+        "provider": "ITRocket"
+        },
+        {
+        "id": "1c69efcfe639d663378bb02f679307876c18fca2",
+        "address": "prysm-testnet-rpc.peer.stingray.plus:26616",
+        "provider": "StingRay"
       }
     ]
   },
@@ -107,6 +121,10 @@
         "provider": "Polkachu"
       },
       {
+        "address": "https://prysm-testnet-rpc.stingray.plus/",
+        "provider": "StingRay"
+      },
+      {
         "address": "https://prysm-testnet-rpc.synergynodes.com/",
         "provider": "Synergy Nodes"
       },
@@ -115,9 +133,14 @@
         "provider": "ValidatorVN"
       },
       {
+
         "address": "https://rpc-prysm.josephtran.xyz/",
         "provider": "JosephTran"
-      }
+      },
+      {
+        "address": "https://prysm-testnet-rpc.itrocket.net/",
+        "provider": "ITRocket"
+      },
     ],
     "rest": [
       {
@@ -127,6 +150,10 @@
       {
         "address": "https://prysm-testnet-api.polkachu.com/",
         "provider": "Polkachu"
+      },
+      {
+        "address": "https://prysm-testnet-api.stingray.plus/",
+        "provider": "StingRay"
       },
       {
         "address": "https://prysm-testnet-api.synergynodes.com/",
@@ -139,7 +166,11 @@
       {
         "address": "https://api-prysm.josephtran.xyz/",
         "provider": "JosephTran"
-      }
+      },
+      {
+        "address": "https://prysm-testnet-api.itrocket.net/",
+        "provider": "ITRocket"
+      },
     ],
     "grpc": [
       {
@@ -157,6 +188,16 @@
       {
         "address": "https://grpc-prysm.josephtran.xyz/",
         "provider": "JosephTran"
+       },
+      {
+        "address": "prysm-testnet-grpc.itrocket.net:443",
+        "provider": "ITRocket"
+      }
+    ],
+     "wss": [
+      {
+        "address": "wss://prysm-testnet-rpc.stingray.plus/websocket",
+        "provider": "StingRay"
       }
     ]
   },
@@ -166,6 +207,12 @@
       "url": "https://explorer.kleomedes.network/prysm",
       "tx_page": "https://explorer.kleomedes.network/prysm/tx/${txHash}",
       "account_page": "https://explorer.kleomedes.network/prysm/account/${accountAddress}"
+    },
+    {
+      "kind": "ITRocket",
+      "url": "https://testnet.itrocket.net/prysm",
+      "tx_page": "https://testnet.itrocket.net/prysm/tx/${txHash}",
+      "account_page": "https://testnet.itrocket.net/prysm/account/${accountAddress}"
     }
   ],
   "images": [
