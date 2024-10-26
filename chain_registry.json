@@ -205,6 +205,10 @@
       {
         "address": "https://rpc.prysm-testnet.stake-take.com/",
         "provider": "Stake-Take"
+      },
+      {
+        "address": "https://prysm-testnet-rpc.cogwheel.zone",
+        "provider": "Cogwheel ⚙️"
       }
     ],
     "rest": [
@@ -275,6 +279,10 @@
       {
         "address": "https://api.prysm-testnet.stake-take.com/",
         "provider": "Stake-Take"
+      },
+      {
+        "address": "https://prysm-testnet-api.cogwheel.zone",
+        "provider": "Cogwheel ⚙️"
       }
     ],
     "grpc": [
@@ -313,13 +321,22 @@
       {
         "address": "prysm-testnet-grpc.itrocket.net:443",
         "provider": "ITRocket"
+      },
+      {
+        "address": "prysm-testnet-grpc.cogwheel.zone:443",
+        "provider": "Cogwheel ⚙️"
       }
     ],
      "wss": [
       {
         "address": "wss://prysm-testnet-rpc.stingray.plus/websocket",
         "provider": "StingRay"
+      },
+      {
+        "address": "wss://prysm-testnet-rpc.cogwheel.zone/websocket",
+        "provider": "Cogwheel ⚙️"
       }
+    ],
     ]
   },
   "explorers": [
