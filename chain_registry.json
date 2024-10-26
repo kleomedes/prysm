@@ -100,6 +100,11 @@
         "provider": "Kleomedes"
       },
       {
+        "id": "ca9e8d35f654aa44a99d36d47120495a82530f1a",
+        "address": "prysm-t.peer.stavr.tech:13256",
+        "provider": "🔥STAVR🔥"
+     },
+      {
         "id": "271fe43e9a393cc47e288e80aa5b1ec1452fa0e7",
         "address": "88.99.149.170:29656",
         "provider": "Vinjan.Inc"  
@@ -143,6 +148,10 @@
       {
         "address": "https://prysm-testnet-rpc.synergynodes.com/",
         "provider": "Synergy Nodes"
+      },
+      {
+        "address": "https://prysm.rpc.t.stavr.tech/",
+        "provider": "🔥STAVR🔥"
       },
       {
         "address": "https://prysm-rpc.validatorvn.com/",
@@ -191,6 +200,11 @@
         "address": "https://prysm-testnet-api.polkachu.com/",
         "provider": "Polkachu"
       },
+      {
+
+        "address": "https://prysm.api.t.stavr.tech/",
+        "provider": "🔥STAVR🔥"
+     },
       {
         "address": "https://prysm-testnet-api.stingray.plus/",
         "provider": "StingRay"
@@ -246,6 +260,10 @@
         "provider": "Synergy Nodes"
       },
       {
+        "address": "prysm.grpc.t.stavr.tech:3790",
+        "provider": "🔥STAVR🔥"
+      },
+      {
         "address": "prysm-grpc.validatorvn.com:44090",
         "provider": "ValidatorVN"
       },
@@ -285,6 +303,12 @@
       "account_page": "https://explorer.kleomedes.network/prysm/account/${accountAddress}"
     },
     {
+      "kind": "🔥STAVR🔥",
+      "url": "https://explorer.stavr.tech/Prysm-Testnet",
+      "tx_page": "https://explorer.stavr.tech/Prysm-Testnet/tx/${txHash}",
+      "account_page": "https://explorer.stavr.tech/Prysm-Testnet/account/${accountAddress}"
+     },
+      {
       "kind": "PingPub",
       "url": "https://explorer.stringlabs.xyz/prysm-testnet",
       "tx_page": "https://explorer.stringlabs.xyz/prysm-testnet/tx/${txHash}",
