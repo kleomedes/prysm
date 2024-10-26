@@ -100,6 +100,11 @@
         "provider": "Kleomedes"
       },
       {
+        "id": "271fe43e9a393cc47e288e80aa5b1ec1452fa0e7",
+        "address": "88.99.149.170:29656",
+        "provider": "Vinjan.Inc"  
+     },
+      {
         "id": "22b6d4f817ed345b7ac4e736715a985d8ee75004",
         "address": "prysm-testnet-peers.mictonode.com:33656",
         "provider": "MictoNode"
@@ -143,6 +148,10 @@
         "address": "https://prysm-rpc.validatorvn.com/",
         "provider": "ValidatorVN"
       },
+      {
+        "address": "https://rpc-prysm.vinjan.xyz/",
+        "provider": "Vinjan.Inc"  
+     },
       {
         "address": "https://rpc-prysm.ongtrong.xyz/",
         "provider": "LexisNexis"
@@ -190,6 +199,10 @@
         "provider": "ValidatorVN"
       },
       {
+        "address": "https://api-prysm.vinjan.xyz/",
+        "provider": "Vinjan.Inc"  
+     },
+      {
         "address": "https://api-prysm.ongtrong.xyz/",
         "provider": "LexisNexis"
      },
@@ -228,6 +241,10 @@
         "provider": "ValidatorVN"
       },
       {
+        "address": "https://grpc-prysm.vinjan.xyz:29090",
+        "provider": "Vinjan.Inc"  
+     },
+      {
         "address": "prysm-grpc.ongtrong.xyz:50052",
         "provider": "LexisNexis"
      },
@@ -257,9 +274,12 @@
       "url": "https://explorer.kleomedes.network/prysm",
       "tx_page": "https://explorer.kleomedes.network/prysm/tx/${txHash}",
       "account_page": "https://explorer.kleomedes.network/prysm/account/${accountAddress}"
-    },
-    {
+      },
+      {
       "kind": "PingPub",
+      "url": "https://xplorer.vinjan.xyz/prysm-testnet",
+      "tx_page": "https://xplorer.vinjan.xyz/prysm-testnet/tx/${txHash}",
+      "account_page": "https://xplorer.vinjan.xyz/prysm-testnet/account/${accountAddress}"  
       },
       {
       "url": "https://explorer.mictonode.com/Prysm-Testnet",
