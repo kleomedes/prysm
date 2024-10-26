@@ -133,7 +133,10 @@
         "provider": "ValidatorVN"
       },
       {
-
+        "address": "https://prysm-testnet-rpc.validator247.com/",
+        "provider": "Validator247"
+      },
+      {
         "address": "https://rpc-prysm.josephtran.xyz/",
         "provider": "JosephTran"
       },
@@ -162,6 +165,10 @@
       {
         "address": "https://prysm-api.validatorvn.com/",
         "provider": "ValidatorVN"
+      },
+      {
+        "address": "https://prysm-testnet-api.validator247.com/",
+        "provider": "Validator247"
       },
       {
         "address": "https://api-prysm.josephtran.xyz/",
