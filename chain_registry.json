@@ -82,16 +82,21 @@
         "address": "rpc-prysm.ongtrong.xyz:29656",
         "provider": "LexisNexis"
      },
-      {
+     {
         "id": "e3156873994bfbb1999bbf6e4a1ad9cb2f14139e",
         "address": "seed-prysm.j-node.net:29656",
         "provider": "JosephTran"
-       },
-       {
+     },
+     {
         "id": "1b5b6a532e24c91d1bc4491a6b989581f5314ea5",
         "address": "prysm-testnet-seed.itrocket.net:25656",
         "provider": "ITRocket"
-      }
+     },
+     {
+        "id": "df949a46ae6529ae1e09b034b49716468d5cc7e9",
+        "address": "testnet-seeds.stakerhouse.com:14256",
+        "provider": "StakerHouse"
+     }
     ],
     "persistent_peers": [
       {
@@ -133,6 +138,11 @@
         "id": "1c69efcfe639d663378bb02f679307876c18fca2",
         "address": "prysm-testnet-rpc.peer.stingray.plus:26616",
         "provider": "StingRay"
+      },
+      {
+        "id": "01e40fe961c9522936a8bb7ede533198614abf9f",
+        "address": "[2a0e:dc0:2:2f71::1]:14256",
+        "provider": "StakerHouse"
       }
     ]
   },
@@ -209,7 +219,11 @@
       {
         "address": "https://prysm-testnet-rpc.cogwheel.zone",
         "provider": "Cogwheel ⚙️"
-      }
+      },
+      {
+        "address": "https://prysm-testnet-rpc.stakerhouse.com",
+        "provider": "StakerHouse"
+      },
     ],
     "rest": [
       {
@@ -283,6 +297,10 @@
       {
         "address": "https://prysm-testnet-api.cogwheel.zone",
         "provider": "Cogwheel ⚙️"
+      },
+      {
+        "address": "https://prysm-testnet-rest.stakerhouse.com",
+        "provider": "StakerHouse"
       }
     ],
     "grpc": [
@@ -325,6 +343,10 @@
       {
         "address": "prysm-testnet-grpc.cogwheel.zone:443",
         "provider": "Cogwheel ⚙️"
+      },
+      {
+        "address": "prysm-testnet-grpc.stakerhouse.com:443",
+        "provider": "StakerHouse"
       }
     ],
      "wss": [
@@ -397,6 +419,12 @@
       "url": "https://explorer.stake-take.com/prysm-testnet",
       "tx_page": "https://explorer.stake-take.com/prysm-testnet/tx/${txHash}",
       "account_page": "https://explorer.stake-take.com/prysm-testnet/account/${accountAddress}"
+    },
+    {
+      "kind": "Cosmotracker",
+      "url": "https://testnet.cosmotracker.com/prysm",
+      "tx_page": "https://testnet.cosmotracker.com/prysm/tx/${txHash}",
+      "account_page": "https://testnet.cosmotracker.com/prysm/account/${accountAddress}"
     }
   ],
   "images": [
