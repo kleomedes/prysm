@@ -347,6 +347,10 @@
       {
         "address": "prysm-testnet-grpc.stakerhouse.com:443",
         "provider": "StakerHouse"
+      },
+      {
+        "address": "https://prysm-testnet-grpc.stingray.plus:443",
+        "provider": "StingRay"
       }
     ],
      "wss": [
@@ -359,7 +363,6 @@
         "provider": "Cogwheel ⚙️"
       }
     ],
-    ]
   },
   "explorers": [
     {
