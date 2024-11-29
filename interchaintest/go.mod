@@ -13,35 +13,34 @@ replace (
 
 	github.com/btcsuite/btcd/btcec/v2 => github.com/btcsuite/btcd/btcec/v2 v2.3.3
 
-	// github.com/cosmos/interchain-security/v5 => github.com/cosmos/interchain-security/v5 v5.0.0-20240905162918-300530f18130 // https://github.com/strangelove-ventures/interchaintest/pull/1236/files
-
 	// If using custom internal modules, replace your app here with the parent application
 	// github.com/lightlabs-dev/prysm => ../.
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// breaks SDK app.toml parsing for client configs.
 	github.com/spf13/viper => github.com/spf13/viper v1.17.0
 
-	// https://github.com/strangelove-ventures/interchaintest/pull/1236/files / // https://github.com/cosmos/interchain-security/blob/main/tests/interchain/go.mod#L280
-	// github.com/strangelove-ventures/interchaintest/v8 => github.com/hyphacoop/interchaintest/v8 v8.2.1-0.20240904201357-3a54d751e08d
-	github.com/strangelove-ventures/interchaintest/v8 => github.com/stana-miric/interchaintest/v8 v8.0.0-20241022073631-60f2480aacd4
-	// github.com/strangelove-ventures/interchaintest/v8 => /home/reece/Desktop/Programming/Go/interchaintest
-
 	// other
 	github.com/vedhavyas/go-subkey => github.com/strangelove-ventures/go-subkey v1.0.7
 )
 
 require (
-	cosmossdk.io/math v1.3.0
-	github.com/CosmWasm/wasmd v0.50.0
+	cosmossdk.io/math v1.4.0
+	github.com/CosmWasm/wasmd v0.51.0
 	github.com/cometbft/cometbft v0.38.15
 	github.com/cosmos/cosmos-sdk v0.50.9
 	github.com/cosmos/ibc-go/v8 v8.5.2
 	github.com/cosmos/interchain-security/v6 v6.3.0
 	github.com/docker/docker v24.0.9+incompatible
-	github.com/strangelove-ventures/interchaintest/v8 v8.8.0
-	github.com/strangelove-ventures/tokenfactory v0.50.3
+	github.com/kelseyhightower/envconfig v1.4.0
+	// https://github.com/strangelove-ventures/interchaintest/pull/1306
+	github.com/strangelove-ventures/interchaintest/v8 v8.7.1-0.20241129221035-bdd9aa53dbdc
+	github.com/strangelove-ventures/tokenfactory v0.50.4-wasmvm2
 	github.com/stretchr/testify v1.9.0
+	github.com/tidwall/gjson v1.18.0
+	github.com/tidwall/sjson v1.2.5
+	go.uber.org/multierr v1.11.0
 	go.uber.org/zap v1.27.0
+	golang.org/x/mod v0.21.0
 	golang.org/x/sync v0.8.0
 )
 
@@ -70,7 +69,7 @@ require (
 	github.com/ChainSafe/go-schnorrkel v1.1.0 // indirect
 	github.com/ChainSafe/go-schnorrkel/1 v0.0.0-00010101000000-000000000000 // indirect
 	github.com/ComposableFi/go-subkey/v2 v2.0.0-tm03420 // indirect
-	github.com/CosmWasm/wasmvm v1.5.4 // indirect
+	github.com/CosmWasm/wasmvm/v2 v2.0.0 // indirect
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/FactomProject/basen v0.0.0-20150613233007-fe3947df716e // indirect
@@ -251,7 +250,6 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
 	github.com/tidwall/btree v1.7.0 // indirect
-	github.com/tidwall/gjson v1.18.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
@@ -268,10 +266,8 @@ require (
 	go.opentelemetry.io/otel v1.24.0 // indirect
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
-	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8 // indirect
-	golang.org/x/mod v0.21.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect
