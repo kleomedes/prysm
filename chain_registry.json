@@ -452,7 +452,7 @@
     },
     {
       "kind": "Chicharito | Node 9x",
-      "url": "hhttps://explorer.node9x.com/prysm",
+      "url": "https://explorer.node9x.com/prysm",
       "tx_page": "https://explorer.node9x.com/prysm/tx/${txHash}",
       "account_page": "https://explorer.node9x.com/prysm/account/${accountAddress}"
     }
