@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -14,15 +16,22 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govv1types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	govv1beta1types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	wasm "github.com/CosmWasm/wasmd/x/wasm/types"
 	ibcconntypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
+	providertypes "github.com/cosmos/interchain-security/v6/x/ccv/provider/types"
 	tokenfactory "github.com/strangelove-ventures/tokenfactory/x/tokenfactory/types"
 )
 
 var (
-	VotingPeriod     = "15s"
-	MaxDepositPeriod = "10s"
+	ProviderSlashingWindow = 10
+	DowntimeJailDuration   = 10 * time.Second
+	CommitTimeout          = 4 * time.Second
+	GovVotingPeriod        = 80 * time.Second
+	GovDepositPeriod       = 60 * time.Second
+	GovMinDepositAmount    = 1000
 
 	Denom   = "uprysm"
 	Name    = "prysm"
@@ -38,14 +47,20 @@ var (
 
 	DefaultGenesis = []cosmos.GenesisKV{
 		// default
-		cosmos.NewGenesisKV("app_state.gov.params.voting_period", VotingPeriod),
-		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", MaxDepositPeriod),
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", GovVotingPeriod.String()),
+		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", GovDepositPeriod.String()),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", Denom),
-		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", strconv.Itoa(GovMinDepositAmount)),
 		// tokenfactory: set create cost in set denom or in gas usage.
 		cosmos.NewGenesisKV("app_state.tokenfactory.params.denom_creation_fee", nil),
 		cosmos.NewGenesisKV("app_state.tokenfactory.params.denom_creation_gas_consume", 1), // cost 1 gas to create a new denom
+		// v4+ ICS provider required
+		cosmos.NewGenesisKV("app_state.provider.params.blocks_per_epoch", "1"),
+		cosmos.NewGenesisKV("app_state.provider.params.slash_meter_replenish_period", "2s"),
+		cosmos.NewGenesisKV("app_state.provider.params.slash_meter_replenish_fraction", "1.00"),
 
+		cosmos.NewGenesisKV("app_state.slashing.params.signed_blocks_window", strconv.Itoa(ProviderSlashingWindow)),
+		cosmos.NewGenesisKV("app_state.slashing.params.downtime_jail_duration", DowntimeJailDuration.String()),
 	}
 
 	DefaultChainConfig = ibc.ChainConfig{
@@ -94,11 +109,24 @@ var (
 	fNodes = 0
 )
 
+func DefaultConfigToml() testutil.Toml {
+	configToml := make(testutil.Toml)
+	consensusToml := make(testutil.Toml)
+	consensusToml["timeout_commit"] = CommitTimeout
+	configToml["consensus"] = consensusToml
+	configToml["block_sync"] = false
+	configToml["fast_sync"] = false
+	return configToml
+}
+
 func GetEncodingConfig() *moduletestutil.TestEncodingConfig {
 	cfg := cosmos.DefaultEncoding()
 	// TODO: add encoding types here for the modules you want to use
 	wasm.RegisterInterfaces(cfg.InterfaceRegistry)
 	tokenfactory.RegisterInterfaces(cfg.InterfaceRegistry)
+	providertypes.RegisterInterfaces(cfg.InterfaceRegistry)
+	govv1beta1types.RegisterInterfaces(cfg.InterfaceRegistry)
+	govv1types.RegisterInterfaces(cfg.InterfaceRegistry)
 	return &cfg
 }
 

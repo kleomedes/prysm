@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 	"sync"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -89,7 +88,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -135,7 +133,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	wasmvm "github.com/CosmWasm/wasmvm"
+	wasmvm2 "github.com/CosmWasm/wasmvm/v2"
 
 	wasmlc "github.com/cosmos/ibc-go/modules/light-clients/08-wasm"
 	wasmlckeeper "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/keeper"
@@ -156,7 +154,13 @@ import (
 
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
+
+	no_valupdates_genutil "github.com/cosmos/interchain-security/v6/x/ccv/no_valupdates_genutil"
+	no_valupdates_staking "github.com/cosmos/interchain-security/v6/x/ccv/no_valupdates_staking"
+	icsprovider "github.com/cosmos/interchain-security/v6/x/ccv/provider"
+	icsproviderkeeper "github.com/cosmos/interchain-security/v6/x/ccv/provider/keeper"
+	providertypes "github.com/cosmos/interchain-security/v6/x/ccv/provider/types"
 )
 
 const (
@@ -166,14 +170,13 @@ const (
 )
 
 var (
-	capabilities = strings.Join(
-		[]string{
-			"iterator",
-			"staking",
-			"stargate",
-			"cosmwasm_1_1", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4",
-			"token_factory",
-		}, ",")
+	capabilities = []string{
+		"iterator",
+		"staking",
+		"stargate",
+		"cosmwasm_1_1", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4",
+		"token_factory",
+	}
 )
 
 // These constants are derived from the above variables.
@@ -207,11 +210,12 @@ var maccPerms = map[string][]string{
 	govtypes.ModuleName:            {authtypes.Burner},
 	nft.ModuleName:                 nil,
 	// non sdk modules
-	ibctransfertypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
-	ibcfeetypes.ModuleName:       nil,
-	icatypes.ModuleName:          nil,
-	wasmtypes.ModuleName:         {authtypes.Burner},
-	tokenfactorytypes.ModuleName: {authtypes.Minter, authtypes.Burner},
+	ibctransfertypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
+	ibcfeetypes.ModuleName:            nil,
+	icatypes.ModuleName:               nil,
+	wasmtypes.ModuleName:              {authtypes.Burner},
+	tokenfactorytypes.ModuleName:      {authtypes.Minter, authtypes.Burner},
+	providertypes.ConsumerRewardsPool: nil,
 }
 
 var (
@@ -240,7 +244,7 @@ type ChainApp struct {
 	SlashingKeeper        slashingkeeper.Keeper
 	MintKeeper            mintkeeper.Keeper
 	DistrKeeper           distrkeeper.Keeper
-	GovKeeper             govkeeper.Keeper
+	GovKeeper             *govkeeper.Keeper
 	CrisisKeeper          *crisiskeeper.Keeper
 	UpgradeKeeper         *upgradekeeper.Keeper
 	ParamsKeeper          paramskeeper.Keeper
@@ -258,6 +262,10 @@ type ChainApp struct {
 	ICAHostKeeper       icahostkeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
 
+	// ICS
+	ProviderKeeper icsproviderkeeper.Keeper
+	ProviderModule icsprovider.AppModule
+
 	// Custom
 	WasmKeeper          wasmkeeper.Keeper
 	TokenFactoryKeeper  tokenfactorykeeper.Keeper
@@ -271,6 +279,7 @@ type ChainApp struct {
 	ScopedTransferKeeper      capabilitykeeper.ScopedKeeper
 	ScopedIBCFeeKeeper        capabilitykeeper.ScopedKeeper
 	ScopedWasmKeeper          capabilitykeeper.ScopedKeeper
+	ScopedICSproviderkeeper   capabilitykeeper.ScopedKeeper
 
 	// the module manager
 	ModuleManager      *module.Manager
@@ -386,6 +395,7 @@ func NewChainApp(
 		packetforwardtypes.StoreKey,
 		wasmlctypes.StoreKey,
 		ratelimittypes.StoreKey,
+		providertypes.StoreKey,
 	)
 
 	tkeys := storetypes.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -434,6 +444,7 @@ func NewChainApp(
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	scopedICAControllerKeeper := app.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
+	app.ScopedICSproviderkeeper = app.CapabilityKeeper.ScopeToModule(providertypes.ModuleName)
 	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasmtypes.ModuleName)
 	app.CapabilityKeeper.Seal()
 
@@ -458,12 +469,12 @@ func NewChainApp(
 	)
 
 	// enable sign mode textual by overwriting the default tx config (after setting the bank keeper)
-	enabledSignModes := append(tx.DefaultSignModes, signingtype.SignMode_SIGN_MODE_TEXTUAL)
-	txConfigOpts := tx.ConfigOptions{
+	enabledSignModes := append(authtx.DefaultSignModes, signingtype.SignMode_SIGN_MODE_TEXTUAL)
+	txConfigOpts := authtx.ConfigOptions{
 		EnabledSignModes:           enabledSignModes,
 		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper),
 	}
-	txConfig, err = tx.NewTxConfigWithOptions(
+	txConfig, err = authtx.NewTxConfigWithOptions(
 		appCodec,
 		txConfigOpts,
 	)
@@ -481,15 +492,7 @@ func NewChainApp(
 		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
 		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
 	)
-	app.MintKeeper = mintkeeper.NewKeeper(
-		appCodec,
-		runtime.NewKVStoreService(keys[minttypes.StoreKey]),
-		app.StakingKeeper,
-		app.AccountKeeper,
-		app.BankKeeper,
-		authtypes.FeeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
+
 	app.DistrKeeper = distrkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[distrtypes.StoreKey]),
@@ -540,7 +543,6 @@ func NewChainApp(
 	groupConfig.MaxMetadataLen = 10000
 	app.GroupKeeper = groupkeeper.NewKeeper(
 		keys[group.StoreKey],
-		// runtime.NewKVStoreService(keys[group.StoreKey]),
 		appCodec,
 		app.MsgServiceRouter(),
 		app.AccountKeeper,
@@ -573,12 +575,44 @@ func NewChainApp(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
+	app.ProviderKeeper = icsproviderkeeper.NewKeeper(
+		appCodec,
+		app.keys[providertypes.StoreKey],
+		app.GetSubspace(providertypes.ModuleName),
+		app.ScopedICSproviderkeeper,
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.PortKeeper,
+		app.IBCKeeper.ConnectionKeeper,
+		app.IBCKeeper.ClientKeeper,
+		app.StakingKeeper,
+		app.SlashingKeeper,
+		app.AccountKeeper,
+		app.DistrKeeper,
+		app.BankKeeper,
+		govkeeper.Keeper{}, // cyclic dependency between provider and governance, will be set later
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
+		authtypes.FeeCollectorName,
+	)
+
+	app.MintKeeper = mintkeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[minttypes.StoreKey]),
+		app.ProviderKeeper,
+		app.AccountKeeper,
+		app.BankKeeper,
+		authtypes.FeeCollectorName,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
 	app.StakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(
 			app.DistrKeeper.Hooks(),
 			app.SlashingKeeper.Hooks(),
+			app.ProviderKeeper.Hooks(),
 		),
 	)
 
@@ -596,7 +630,9 @@ func NewChainApp(
 		runtime.NewKVStoreService(keys[govtypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
-		app.StakingKeeper,
+		// use the ProviderKeeper as StakingKeeper for gov
+		// because governance should be based on the consensus-active validators
+		app.ProviderKeeper,
 		app.DistrKeeper,
 		app.MsgServiceRouter(),
 		govConfig,
@@ -606,10 +642,18 @@ func NewChainApp(
 	// Set legacy router for backwards compatibility with gov v1beta1
 	govKeeper.SetLegacyRouter(govRouter)
 
-	app.GovKeeper = *govKeeper.SetHooks(
+	app.GovKeeper = govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// register the governance hooks
+			app.ProviderKeeper.Hooks(),
 		),
+	)
+
+	// Set gov on provider
+	app.ProviderKeeper.SetGovKeeper(*app.GovKeeper)
+	app.ProviderModule = icsprovider.NewAppModule(
+		&app.ProviderKeeper,
+		app.GetSubspace(providertypes.ModuleName),
+		app.keys[providertypes.StoreKey],
 	)
 
 	app.NFTKeeper = nftkeeper.NewKeeper(
@@ -691,7 +735,6 @@ func NewChainApp(
 		keys[packetforwardtypes.StoreKey],
 		app.TransferKeeper, // will be zero-value here, reference is set later on with SetTransferKeeper.
 		app.IBCKeeper.ChannelKeeper,
-		app.DistrKeeper,
 		app.BankKeeper,
 		app.IBCKeeper.ChannelKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -748,7 +791,7 @@ func NewChainApp(
 		app.GRPCQueryRouter(),
 		wasmDir,
 		wasmConfig,
-		strings.Join(AllCapabilities(), ","),
+		AllCapabilities(),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		wasmOpts...,
 	)
@@ -769,7 +812,7 @@ func NewChainApp(
 	dataDir := filepath.Join(homePath, "data")
 
 	var memCacheSizeMB uint32 = 100
-	lc08, err := wasmvm.NewVM(filepath.Join(dataDir, "08-light-client"), capabilities, 32, false, memCacheSizeMB)
+	lc08, err := wasmvm2.NewVM(filepath.Join(dataDir, "08-light-client"), capabilities, 32, false, memCacheSizeMB)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create VM for 08 light client: %s", err))
 	}
@@ -787,6 +830,7 @@ func NewChainApp(
 	// Create Transfer Stack
 	var transferStack porttypes.IBCModule
 	transferStack = transfer.NewIBCModule(app.TransferKeeper)
+	transferStack = icsprovider.NewIBCMiddleware(transferStack, app.ProviderKeeper)
 	transferStack = ratelimit.NewIBCMiddleware(app.RatelimitKeeper, transferStack)
 	transferStack = ibcfee.NewIBCMiddleware(transferStack, app.IBCFeeKeeper)
 	transferStack = packetforward.NewIBCMiddleware(
@@ -794,7 +838,6 @@ func NewChainApp(
 		app.PacketForwardKeeper,
 		0,
 		packetforwardkeeper.DefaultForwardTransferPacketTimeoutTimestamp,
-		packetforwardkeeper.DefaultRefundTransferPacketTimeoutTimestamp,
 	)
 
 	// Create Interchain Accounts Stack
@@ -823,6 +866,7 @@ func NewChainApp(
 	ibcRouter.AddRoute(wasmtypes.ModuleName, wasmStack)
 	ibcRouter.AddRoute(icacontrollertypes.SubModuleName, icaControllerStack)
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostStack)
+	ibcRouter.AddRoute(providertypes.ModuleName, app.ProviderModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
 	// --- Module Options ---
@@ -834,7 +878,7 @@ func NewChainApp(
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
 	app.ModuleManager = module.NewManager(
-		genutil.NewAppModule(
+		no_valupdates_genutil.NewAppModule(
 			app.AccountKeeper,
 			app.StakingKeeper,
 			app,
@@ -844,14 +888,14 @@ func NewChainApp(
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
-		gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
+		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, nil, app.GetSubspace(minttypes.ModuleName)),
 		slashing.NewAppModule(
 			appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper,
 			app.StakingKeeper,
 			app.GetSubspace(slashingtypes.ModuleName), app.interfaceRegistry),
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(distrtypes.ModuleName)),
-		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
+		no_valupdates_staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
 		upgrade.NewAppModule(app.UpgradeKeeper, app.AccountKeeper.AddressCodec()),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		params.NewAppModule(app.ParamsKeeper),
@@ -878,6 +922,7 @@ func NewChainApp(
 		packetforward.NewAppModule(app.PacketForwardKeeper, app.GetSubspace(packetforwardtypes.ModuleName)),
 		wasmlc.NewAppModule(app.WasmClientKeeper),
 		ratelimit.NewAppModule(appCodec, app.RatelimitKeeper),
+		app.ProviderModule,
 	)
 
 	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
@@ -887,7 +932,13 @@ func NewChainApp(
 	app.BasicModuleManager = module.NewBasicManagerFromManager(
 		app.ModuleManager,
 		map[string]module.AppModuleBasic{
-			genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+			genutiltypes.ModuleName:  genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+			providertypes.ModuleName: app.ProviderModule,
+			govtypes.ModuleName: gov.NewAppModuleBasic(
+				[]govclient.ProposalHandler{
+					// paramsclient.ProposalHandler,
+				},
+			),
 		})
 	app.BasicModuleManager.RegisterLegacyAminoCodec(legacyAmino)
 	app.BasicModuleManager.RegisterInterfaces(interfaceRegistry)
@@ -920,6 +971,7 @@ func NewChainApp(
 		packetforwardtypes.ModuleName,
 		wasmlctypes.ModuleName,
 		ratelimittypes.ModuleName,
+		providertypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderEndBlockers(
@@ -940,6 +992,7 @@ func NewChainApp(
 		packetforwardtypes.ModuleName,
 		wasmlctypes.ModuleName,
 		ratelimittypes.ModuleName,
+		providertypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -960,7 +1013,6 @@ func NewChainApp(
 		slashingtypes.ModuleName,
 		govtypes.ModuleName,
 		minttypes.ModuleName,
-		crisistypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		authz.ModuleName,
@@ -982,6 +1034,8 @@ func NewChainApp(
 		packetforwardtypes.ModuleName,
 		wasmlctypes.ModuleName,
 		ratelimittypes.ModuleName,
+		providertypes.ModuleName,
+		crisistypes.ModuleName, // must be last so the provider crisis asserts can be run
 	}
 	app.ModuleManager.SetOrderInitGenesis(genesisModuleOrder...)
 	app.ModuleManager.SetOrderExportGenesis(genesisModuleOrder...)
@@ -1141,7 +1195,6 @@ func (app *ChainApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respon
 
 	return app.BaseApp.FinalizeBlock(req)
 }
-
 func (app *ChainApp) setPostHandler() {
 	postHandler, err := posthandler.NewPostHandler(
 		posthandler.HandlerOptions{},
@@ -1356,6 +1409,9 @@ func BlockedAddresses() map[string]bool {
 	// allow the following addresses to receive funds
 	delete(modAccAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
+	// Remove the ConsumerRewardsPool from the group of blocked recipient addresses in bank
+	delete(modAccAddrs, authtypes.NewModuleAddress(providertypes.ConsumerRewardsPool).String())
+
 	return modAccAddrs
 }
 
@@ -1384,8 +1440,9 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
-	paramsKeeper.Subspace(packetforwardtypes.ModuleName).WithKeyTable(packetforwardtypes.ParamKeyTable())
+	paramsKeeper.Subspace(packetforwardtypes.ModuleName)
 	paramsKeeper.Subspace(ratelimittypes.ModuleName)
+	paramsKeeper.Subspace(providertypes.ModuleName).WithKeyTable(providertypes.ParamKeyTable())
 
 	return paramsKeeper
 }
